@@ -1,0 +1,10 @@
+DFS: Bangalore → Hyderabad → Mumbai
+BFS: Bangalore → Hyderabad → Mumbai
+DFS: Kyoto → Osaka → Tokyo → Delhi → Mumbai
+BFS: Kyoto → Tokyo → Delhi → Mumbai
+DFS: Agra → Delhi → Mumbai → Hyderabad
+BFS: Agra → Delhi → Mumbai → Hyderabad
+DFS: Mumbai → Pune
+BFS: Mumbai → Pune
+DFS: Mumbai → Delhi → Tokyo → Osaka → Kyoto
+BFS: Mumbai → Delhi → Tokyo → Kyoto
