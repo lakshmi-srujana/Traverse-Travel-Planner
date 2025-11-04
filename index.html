@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Traverse Travel Planner</title>
+
+ <style>
+    body {
+        font-family:  "Helvetica Neue", Helvetica, "Segoe UI", Verdana, Geneva, sans-serif;
+        background: radial-gradient(circle at top left, #0d1b2a, #000000);
+        color: #f1f5f9;
+        text-align: center;
+        padding: 40px;
+    }
+
+    h1 {
+        color: #00b4d8;
+        font-size: 2.0em;
+        margin-bottom: 25px;
+        text-shadow: 0 0 12px rgba(0, 180, 216, 0.5);
+    }
+
+    /* 🌍 Logo Styling */
+   img.logo {
+    width: 320px;   /* Increased width */
+    height: auto;   /* Keeps aspect ratio */
+    margin-bottom: 18px;
+    border-radius: 15px;  /* Slightly rounded edges */
+    box-shadow: 0 0 25px rgba(0, 180, 216, 0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+img.logo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 35px rgba(0, 180, 216, 0.7);
+}
+
+
+    .inputs {
+        margin-bottom: 18px;
+    }
+
+    input {
+        margin: 6px;
+        padding: 10px 14px;
+        border: 1px solid #1e3a5f;
+        border-radius: 10px;
+        width: 220px;
+        background-color: #1a1a1a;
+        color: #e2e8f0;
+        outline: none;
+        transition: all 0.2s ease-in-out;
+    }
+
+    input:focus {
+        border-color: #00b4d8;
+        box-shadow: 0 0 8px rgba(0, 180, 216, 0.6);
+    }
+
+    .buttons-row {
+        margin: 14px 0;
+    }
+
+    button {
+        margin: 8px;
+        padding: 10px 18px;
+        border: none;
+        background: linear-gradient(135deg, #00b4d8, #0077b6);
+        color: white;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.25s ease-in-out;
+    }
+
+    button:hover {
+        background: linear-gradient(135deg, #0096c7, #023e8a);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 180, 216, 0.3);
+    }
+
+    #result {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        border-radius: 12px;
+        width: 75%;
+        margin-left: auto;
+        margin-right: auto;
+        box-shadow: 0 0 14px rgba(0, 180, 216, 0.15);
+        text-align: left;
+        font-size: 15px;
+        line-height: 1.6;
+        min-height: 90px;
+        border: 1px solid #1e3a5f;
+    }
+
+    footer {
+        margin-top: 32px;
+        font-size: 14px;
+        color: #7aa2c1;
+        letter-spacing: 0.3px;
+    }
+
+    footer span {
+        color: #00b4d8;
+        font-weight: 600;
+    }
+</style>
+
+
+</head>
+
+<body>
+<img src="static/logo.png" alt="Traverse Logo" class="logo">
+<h1>Plan ✈ Explore ✈ Wander</h1>
+<div class="inputs">
+    <label>Start City:</label>
+    <input id="start" placeholder="e.g. Mumbai">
+    <label>Destination City:</label>
+    <input id="goal" placeholder="e.g. Osaka">
+</div>
+
+<div class="buttons-row">
+    <button onclick="explorePaths()">Explore All Paths (DFS)</button>
+    <button onclick="shortestPath()">Find Shortest Path (BFS)</button>
+    <button onclick="bestRoute()">Find Cheapest Route (Min-Heap)</button>
+    <button onclick="showRecent()">Show Recent Searches (Stack)</button>
+    <button onclick="showVisited()">Show Visited Cities (Queue)</button>
+</div>
+
+<div class="buttons-row">
+    <button onclick="recommend()">Get Recommendations</button>
+    <button onclick="connected()">Most Connected City</button>
+    <button onclick="cycle()">Check for Cycles</button>
+    <button onclick="showHistory()">Show Travel History (Linked List)</button>
+</div>
+
+<br><br>
+<h3>✈ Add or Remove Routes ✈</h3>
+<label>City 1:</label> <input id="city1" placeholder="e.g. Mumbai">
+<label>City 2:</label> <input id="city2" placeholder="e.g. Delhi">
+<label>Cost:</label> <input id="cost" type="number" placeholder="e.g. 5">
+<br><br>
+<button onclick="addRoute()">Add Route</button>
+<button onclick="deleteRoute()">Delete Route</button>
+
+<br><br>
+<h3>✈ Add New City ✈</h3>
+<input type="text" id="newCity" placeholder="Enter city name">
+<button onclick="addCity()">Add City</button>
+
+<br><br>
+<h3>✈ Save or Load Graph ✈</h3>
+<button onclick="saveGraph()">Save Graph</button>
+<button onclick="loadGraph()">Load Graph</button>
+
+<br><br>
+<h3>✈ City Search ✈</h3>
+<input id="searchInput" placeholder="Enter starting letters">
+<button onclick="searchCity()">Search</button>
+
+<br><br>
+<h3>✈ Trip Planner ✈</h3>
+<input id="planCity" placeholder="Enter city name">
+<button onclick="addToPlan()">Add to Plan</button>
+<button onclick="viewPlan()">View Trip Plan</button>
+
+<div id="result">🔍 Enter start & destination and choose an option to begin.</div>
+
+<footer>Plan ✈ Explore ✈ Wander</footer>
+
+<script>
+function showMessage(html) {
+    document.getElementById("result").innerHTML = html;
+}
+
+function getInputs() {
+    return {
+        start: document.getElementById("start").value.trim(),
+        goal: document.getElementById("goal").value.trim()
+    };
+}
+
+// DFS
+async function explorePaths() {
+    const { start, goal } = getInputs();
+    if (!start || !goal) return showMessage("⚠️ Please enter both start and destination cities.");
+    const res = await fetch("/explore_paths", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ start, goal })
+    });
+    const data = await res.json();
+    if (data.paths?.length)
+        showMessage("<b>🌐 All Possible Paths (DFS):</b><br><br>" + data.paths.map(p => "🛤️ " + p.join(" ➡️ ")).join("<br>"));
+    else showMessage("❌ " + (data.error || "No possible paths found."));
+}
+
+// BFS
+async function shortestPath() {
+    const { start, goal } = getInputs();
+    if (!start || !goal) return showMessage("⚠️ Please enter both start and destination cities.");
+    const res = await fetch("/shortest_path", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ start, goal })
+    });
+    const data = await res.json();
+    if (data.path)
+        showMessage("🛣️ <b>Shortest Path (BFS):</b><br><br>" + data.path.join(" ➡️ "));
+    else showMessage("❌ " + (data.error || "No path found."));
+}
+
+// Cheapest route
+async function bestRoute() {
+    const { start, goal } = getInputs();
+    if (!start || !goal) return showMessage("⚠️ Please enter both start and destination cities.");
+    const res = await fetch("/best_route", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ start, goal })
+    });
+    const data = await res.json();
+    if (data.path)
+        showMessage(`💰 <b>Best (Cheapest) Route:</b><br><br>${data.path.join(" ➡️ ")}<br><br>💵 Total Cost: ${data.cost}`);
+    else showMessage("❌ " + (data.error || "No best route found."));
+}
+
+// Stack
+async function showRecent() {
+    const res = await fetch("/recent");
+    const data = await res.json();
+    if (data.recent?.length)
+        showMessage("🕓 <b>Recent Searches:</b><br><br>" + data.recent.map(r => `➡️ ${r[0]} ➡️ ${r[1]}`).join("<br>"));
+    else showMessage("ℹ️ No recent searches yet.");
+}
+
+// Queue
+async function showVisited() {
+    const res = await fetch("/visited");
+    const data = await res.json();
+    if (data.visited?.length)
+        showMessage("📍 <b>Visited Cities (queue):</b><br><br>" + data.visited.join(" ➡️ "));
+    else showMessage("ℹ️ No cities visited yet.");
+}
+
+// Recommendations
+async function recommend() {
+    const city = document.getElementById("start").value.trim();
+    if (!city) return showMessage("⚠️ Enter a start city to get recommendations.");
+    const res = await fetch("/recommend", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ city })
+    });
+    const data = await res.json();
+    if (data.recommendations?.length)
+        showMessage(`✨ <b>Recommended cities from ${city}:</b><br><br>` + data.recommendations.join("<br>"));
+    else showMessage("❌ " + (data.error || "No recommendations found."));
+}
+
+// Most Connected
+async function connected() {
+    const res = await fetch("/most_connected");
+    const data = await res.json();
+    showMessage(`🏙️ <b>Most connected city:</b><br><br>${data.city} (${data.connections} connections)`);
+}
+
+// Cycle Detection
+async function cycle() {
+    const res = await fetch("/has_cycle");
+    const data = await res.json();
+    showMessage(data.cycle ? "🔁 <b>Cycle detected in network!</b>" : "✅ <b>No cycles found.</b>");
+}
+
+// History
+async function showHistory() {
+    const res = await fetch("/history");
+    const data = await res.json();
+    if (data.history?.length) {
+        let text = "🧾 <b>Travel History:</b><br>";
+        data.history.forEach((r, i) => {
+            text += `${i + 1}. ${r.start} ➡️ ${r.goal} (${r.path.join(" ➡️ ")}`;
+            if (r.cost) text += ` | 💰 Cost: ${r.cost}`;
+            text += ")<br>";
+        });
+        showMessage(text);
+    } else showMessage("📭 No travel history yet.");
+}
+
+// Add/Delete Route
+async function addRoute() {
+    const city1 = document.getElementById("city1").value.trim();
+    const city2 = document.getElementById("city2").value.trim();
+    const cost = document.getElementById("cost").value || 1;
+    const res = await fetch("/add_route", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ city1, city2, cost })
+    });
+    const data = await res.json();
+    showMessage(data.message || data.error);
+}
+
+async function deleteRoute() {
+    const city1 = document.getElementById("city1").value.trim();
+    const city2 = document.getElementById("city2").value.trim();
+    const res = await fetch("/delete_route", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ city1, city2 })
+    });
+    const data = await res.json();
+    showMessage(data.message || data.error);
+}
+
+// Save/Load Graph
+async function saveGraph() {
+    const res = await fetch("/save_graph", { method: "POST" });
+    const data = await res.json();
+    showMessage(data.message);
+}
+
+async function loadGraph() {
+    const res = await fetch("/load_graph");
+    const data = await res.json();
+    showMessage(data.message || data.error);
+}
+
+// City Search
+async function searchCity() {
+    const prefix = document.getElementById("searchInput").value.trim();
+    const res = await fetch("/search_city", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ prefix })
+    });
+    const data = await res.json();
+    if (data.matches)
+        showMessage(`🔍 Cities starting with '${prefix}':<br>` + data.matches.join("<br>"));
+    else showMessage(data.message || "❌ " + data.error);
+}
+
+// Trip Planner
+async function addToPlan() {
+    const city = document.getElementById("planCity").value.trim();
+    const res = await fetch("/add_to_plan", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ city })
+    });
+    const data = await res.json();
+    showMessage(data.message || data.error);
+}
+
+async function viewPlan() {
+    const res = await fetch("/view_plan");
+    const data = await res.json();
+    if (data.plan?.length)
+        showMessage("🧳 Your Trip Plan:<br>" + data.plan.join(" ➡️ "));
+    else showMessage(data.message || "❌ Trip plan is empty!");
+}
+
+// Add City
+async function addCity() {
+    const city = document.getElementById("newCity").value.trim();
+    const res = await fetch("/add_city", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ city })
+    });
+    const data = await res.json();
+    showMessage(data.message || data.error);
+}
+</script>
+</body>
+</html>
